@@ -1,0 +1,542 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Clearbooks — Dashboard financier automatisé</title>
+<meta name="description" content="Connectez Pennylane ou Qonto à un dashboard financier qui se met à jour chaque nuit. Configuré en 30 min, actif pour toujours."/>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;1,9..40,300&family=DM+Serif+Display:ital@0;1&display=swap" rel="stylesheet"/>
+<style>
+  :root {
+    --teal: #1D9E75;
+    --teal-dark: #0F6E56;
+    --teal-light: #E1F5EE;
+    --teal-mid: #9FE1CB;
+    --text: #1a1a18;
+    --text-muted: #6b6b67;
+    --text-faint: #9a9a96;
+    --bg: #fafaf8;
+    --bg-card: #ffffff;
+    --border: rgba(0,0,0,0.08);
+    --border-med: rgba(0,0,0,0.12);
+    --red: #E24B4A;
+    --amber: #EF9F27;
+    --radius: 12px;
+    --radius-sm: 8px;
+  }
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; }
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    font-size: 16px;
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+  }
+  .container { max-width: 960px; margin: 0 auto; padding: 0 24px; }
+
+  /* NAV */
+  nav {
+    position: sticky; top: 0; z-index: 100;
+    background: rgba(250,250,248,0.92);
+    backdrop-filter: blur(12px);
+    border-bottom: 1px solid var(--border);
+    padding: 14px 0;
+  }
+  .nav-inner { display: flex; align-items: center; justify-content: space-between; }
+  .logo { display: flex; align-items: center; gap: 10px; text-decoration: none; }
+  .logo-icon {
+    width: 34px; height: 34px; border-radius: 9px;
+    background: var(--teal);
+    display: flex; align-items: center; justify-content: center;
+  }
+  .logo-icon svg { width: 18px; height: 18px; }
+  .logo-name { font-size: 17px; font-weight: 500; color: var(--text); letter-spacing: -0.02em; }
+  .logo-by { font-size: 11px; color: var(--text-faint); margin-left: 2px; }
+  .nav-cta {
+    padding: 8px 18px; border-radius: 100px;
+    background: var(--teal); color: #fff;
+    font-size: 13px; font-weight: 500;
+    text-decoration: none; border: none; cursor: pointer;
+    transition: background .15s;
+  }
+  .nav-cta:hover { background: var(--teal-dark); }
+
+  /* HERO */
+  .hero { padding: 80px 0 64px; text-align: center; }
+  .hero-badge {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 5px 14px; border-radius: 100px;
+    background: var(--teal-light); color: var(--teal-dark);
+    font-size: 12px; font-weight: 500; margin-bottom: 24px;
+    border: 1px solid var(--teal-mid);
+  }
+  .hero-badge::before {
+    content: ''; width: 6px; height: 6px; border-radius: 50%;
+    background: var(--teal); display: block;
+  }
+  .hero h1 {
+    font-family: 'DM Serif Display', serif;
+    font-size: clamp(36px, 6vw, 56px);
+    line-height: 1.1; letter-spacing: -0.02em;
+    color: var(--text); margin-bottom: 20px;
+    max-width: 700px; margin-left: auto; margin-right: auto;
+  }
+  .hero h1 em { font-style: italic; color: var(--teal); }
+  .hero p {
+    font-size: 18px; color: var(--text-muted);
+    max-width: 520px; margin: 0 auto 36px;
+    font-weight: 300; line-height: 1.65;
+  }
+  .hero-ctas { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; margin-bottom: 28px; }
+  .btn-primary {
+    padding: 14px 28px; border-radius: 100px;
+    background: var(--teal); color: #fff;
+    font-size: 15px; font-weight: 500;
+    text-decoration: none; border: none; cursor: pointer;
+    transition: background .15s, transform .1s;
+    display: inline-block;
+  }
+  .btn-primary:hover { background: var(--teal-dark); transform: translateY(-1px); }
+  .btn-secondary {
+    padding: 14px 28px; border-radius: 100px;
+    background: transparent; color: var(--text);
+    font-size: 15px; font-weight: 500;
+    text-decoration: none; border: 1.5px solid var(--border-med); cursor: pointer;
+    transition: border-color .15s, transform .1s;
+    display: inline-block;
+  }
+  .btn-secondary:hover { border-color: var(--teal); color: var(--teal); transform: translateY(-1px); }
+  .hero-trust { display: flex; gap: 20px; justify-content: center; flex-wrap: wrap; }
+  .trust-item { display: flex; align-items: center; gap: 6px; font-size: 13px; color: var(--text-muted); }
+  .trust-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--teal); flex-shrink: 0; }
+
+  /* DASHBOARD PREVIEW */
+  .preview { padding: 0 0 80px; }
+  .dashboard {
+    background: var(--bg-card); border: 1px solid var(--border);
+    border-radius: var(--radius); padding: 20px;
+    box-shadow: 0 4px 24px rgba(0,0,0,0.06), 0 1px 4px rgba(0,0,0,0.04);
+  }
+  .dash-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; }
+  .dash-title { font-size: 13px; font-weight: 500; color: var(--text); }
+  .dash-sub { font-size: 11px; color: var(--text-faint); margin-top: 1px; }
+  .dash-sync {
+    font-size: 11px; padding: 3px 10px; border-radius: 100px;
+    background: var(--teal-light); color: var(--teal-dark);
+    font-weight: 500;
+  }
+  .kpis { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-bottom: 12px; }
+  @media(max-width: 600px) { .kpis { grid-template-columns: repeat(2,1fr); } }
+  .kpi {
+    background: var(--bg); border: 1px solid var(--border);
+    border-radius: var(--radius-sm); padding: 12px;
+  }
+  .kpi-label { font-size: 11px; color: var(--text-faint); margin-bottom: 4px; }
+  .kpi-value { font-size: 20px; font-weight: 500; color: var(--text); letter-spacing: -0.02em; }
+  .kpi-delta { font-size: 11px; margin-top: 2px; }
+  .delta-up { color: var(--teal); }
+  .delta-down { color: var(--red); }
+  .kpi-value.positive { color: var(--teal); }
+  .alerts { background: var(--bg); border: 1px solid var(--border); border-radius: var(--radius-sm); overflow: hidden; }
+  .alert-row { display: flex; align-items: flex-start; gap: 10px; padding: 10px 12px; border-bottom: 1px solid var(--border); font-size: 13px; color: var(--text); }
+  .alert-row:last-child { border-bottom: none; }
+  .alert-dot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; margin-top: 4px; }
+
+  /* SECTION BASE */
+  section { padding: 72px 0; }
+  .section-tag {
+    display: inline-block; font-size: 11px; font-weight: 500;
+    letter-spacing: .08em; text-transform: uppercase;
+    color: var(--teal); margin-bottom: 12px;
+  }
+  .section-title {
+    font-family: 'DM Serif Display', serif;
+    font-size: clamp(28px, 4vw, 40px);
+    line-height: 1.15; letter-spacing: -0.02em;
+    color: var(--text); margin-bottom: 16px;
+  }
+  .section-title em { font-style: italic; color: var(--teal); }
+  .section-sub {
+    font-size: 17px; color: var(--text-muted);
+    font-weight: 300; line-height: 1.65;
+    max-width: 540px; margin-bottom: 40px;
+  }
+  .divider { border: none; border-top: 1px solid var(--border); }
+
+  /* PAIN */
+  .pain-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; }
+  @media(max-width: 600px) { .pain-grid { grid-template-columns: 1fr; } }
+  .pain-card {
+    background: var(--bg-card); border: 1px solid var(--border);
+    border-radius: var(--radius); padding: 20px;
+    transition: border-color .15s;
+  }
+  .pain-card:hover { border-color: var(--border-med); }
+  .pain-icon { font-size: 20px; margin-bottom: 10px; }
+  .pain-card h3 { font-size: 15px; font-weight: 500; color: var(--text); margin-bottom: 6px; }
+  .pain-card p { font-size: 14px; color: var(--text-muted); line-height: 1.6; }
+
+  /* STEPS */
+  .steps { display: flex; flex-direction: column; gap: 0; }
+  .step { display: flex; gap: 20px; padding: 24px 0; border-bottom: 1px solid var(--border); }
+  .step:last-child { border-bottom: none; }
+  .step-num {
+    width: 36px; height: 36px; border-radius: 50%;
+    background: var(--teal); color: #fff;
+    font-size: 15px; font-weight: 500;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0; margin-top: 2px;
+  }
+  .step h3 { font-size: 17px; font-weight: 500; color: var(--text); margin-bottom: 6px; }
+  .step p { font-size: 15px; color: var(--text-muted); font-weight: 300; line-height: 1.65; }
+
+  /* COMPAT */
+  .compat-section { background: var(--teal-light); border-radius: var(--radius); padding: 40px; }
+  .tools { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 20px; }
+  .tool-pill {
+    padding: 8px 18px; border-radius: 100px;
+    background: var(--bg-card); color: var(--text);
+    font-size: 14px; font-weight: 400;
+    border: 1px solid var(--teal-mid);
+  }
+
+  /* PRICING */
+  .pricing-wrap { display: flex; justify-content: center; }
+  .pricing-card {
+    background: var(--bg-card); border: 2px solid var(--teal);
+    border-radius: var(--radius); padding: 32px;
+    max-width: 440px; width: 100%;
+    box-shadow: 0 8px 32px rgba(29,158,117,0.12);
+  }
+  .pricing-tag {
+    display: inline-block; font-size: 11px; font-weight: 500;
+    letter-spacing: .08em; text-transform: uppercase;
+    color: var(--teal); margin-bottom: 16px;
+    background: var(--teal-light); padding: 4px 12px; border-radius: 100px;
+  }
+  .price-main { font-size: 42px; font-weight: 500; color: var(--text); letter-spacing: -0.03em; margin-bottom: 4px; }
+  .price-main span { font-size: 18px; color: var(--text-muted); font-weight: 300; }
+  .price-sub { font-size: 15px; color: var(--text-muted); font-weight: 300; margin-bottom: 24px; padding-bottom: 24px; border-bottom: 1px solid var(--border); }
+  .features { list-style: none; margin-bottom: 28px; }
+  .features li { display: flex; align-items: center; gap: 10px; padding: 9px 0; border-bottom: 1px solid var(--border); font-size: 15px; color: var(--text); }
+  .features li:last-child { border-bottom: none; }
+  .check {
+    width: 20px; height: 20px; border-radius: 50%;
+    background: var(--teal); display: flex; align-items: center;
+    justify-content: center; flex-shrink: 0;
+  }
+  .check svg { width: 10px; height: 10px; }
+  .btn-cta-full {
+    width: 100%; padding: 15px;
+    background: var(--teal); color: #fff;
+    font-size: 16px; font-weight: 500;
+    border: none; border-radius: 100px; cursor: pointer;
+    transition: background .15s, transform .1s;
+    text-decoration: none; display: block; text-align: center;
+    margin-bottom: 12px;
+  }
+  .btn-cta-full:hover { background: var(--teal-dark); transform: translateY(-1px); }
+  .price-note { font-size: 13px; color: var(--text-faint); text-align: center; }
+
+  /* FAQ */
+  .faq-list { border-top: 1px solid var(--border); }
+  .faq-item { border-bottom: 1px solid var(--border); padding: 20px 0; cursor: pointer; }
+  .faq-q { font-size: 16px; font-weight: 500; color: var(--text); display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+  .faq-q::after { content: '+'; font-size: 20px; font-weight: 300; color: var(--text-faint); flex-shrink: 0; transition: transform .2s; }
+  .faq-item.open .faq-q::after { transform: rotate(45deg); }
+  .faq-a { font-size: 15px; color: var(--text-muted); font-weight: 300; line-height: 1.65; max-height: 0; overflow: hidden; transition: max-height .3s ease, padding .3s; }
+  .faq-item.open .faq-a { max-height: 200px; padding-top: 12px; }
+
+  /* CTA FINAL */
+  .cta-section {
+    text-align: center; padding: 80px 0;
+    background: linear-gradient(180deg, var(--bg) 0%, var(--teal-light) 100%);
+    border-radius: var(--radius);
+    margin-bottom: 40px;
+  }
+  .cta-section h2 {
+    font-family: 'DM Serif Display', serif;
+    font-size: clamp(28px, 4vw, 40px);
+    line-height: 1.15; letter-spacing: -0.02em;
+    color: var(--text); margin-bottom: 12px;
+  }
+  .cta-section p { font-size: 17px; color: var(--text-muted); font-weight: 300; margin-bottom: 28px; }
+
+  /* FOOTER */
+  footer { padding: 32px 0; border-top: 1px solid var(--border); text-align: center; }
+  footer p { font-size: 13px; color: var(--text-faint); }
+  footer a { color: var(--teal); text-decoration: none; }
+
+  /* ANIMATIONS */
+  @keyframes fadeUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+  .hero > * { animation: fadeUp .5s ease both; }
+  .hero .hero-badge { animation-delay: .05s; }
+  .hero h1 { animation-delay: .1s; }
+  .hero p { animation-delay: .15s; }
+  .hero-ctas { animation-delay: .2s; }
+  .hero-trust { animation-delay: .25s; }
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="container">
+    <div class="nav-inner">
+      <a href="#" class="logo">
+        <div class="logo-icon">
+          <svg viewBox="0 0 18 18" fill="none">
+            <rect x="2" y="1" width="9" height="12" rx="1.5" fill="white" opacity="0.9"/>
+            <rect x="3.5" y="3.5" width="5" height="1.2" rx="0.6" fill="#1D9E75"/>
+            <rect x="3.5" y="6" width="3.5" height="1.2" rx="0.6" fill="#1D9E75"/>
+            <circle cx="13.5" cy="13.5" r="4" fill="white"/>
+            <path d="M11.5 13.5l1.5 1.5 2.5-2.5" stroke="#1D9E75" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </div>
+        <div>
+          <div class="logo-name">Clearbooks</div>
+        </div>
+      </a>
+      <a href="VOTRE_LIEN_CALENDLY" class="nav-cta" target="_blank">Réserver une démo</a>
+    </div>
+  </div>
+</nav>
+
+<main>
+  <div class="container">
+
+    <!-- HERO -->
+    <section class="hero">
+      <div class="hero-badge">Compatible Pennylane · Qonto · QuickBooks</div>
+      <h1>Pilotez votre trésorerie<br/><em>en temps réel</em>, sans rien faire</h1>
+      <p>Votre dashboard financier se met à jour chaque nuit automatiquement. Vous ouvrez votre tableau de bord le matin — tout est là.</p>
+      <div class="hero-ctas">
+        <a href="VOTRE_LIEN_CALENDLY" class="btn-primary" target="_blank">Je veux mon dashboard →</a>
+        <a href="#comment" class="btn-secondary">Comment ça marche</a>
+      </div>
+      <div class="hero-trust">
+        <span class="trust-item"><span class="trust-dot"></span>Configuration en 30 min</span>
+        <span class="trust-item"><span class="trust-dot"></span>Aucune saisie manuelle</span>
+        <span class="trust-item"><span class="trust-dot"></span>Sans engagement</span>
+      </div>
+    </section>
+
+    <!-- DASHBOARD PREVIEW -->
+    <div class="preview">
+      <div class="dashboard">
+        <div class="dash-header">
+          <div>
+            <div class="dash-title">Agence Lumière — Novembre 2024</div>
+            <div class="dash-sub">Mis à jour cette nuit à 00:47 via Pennylane</div>
+          </div>
+          <span class="dash-sync">Synchronisé</span>
+        </div>
+        <div class="kpis">
+          <div class="kpi">
+            <div class="kpi-label">Trésorerie actuelle</div>
+            <div class="kpi-value">47 320 €</div>
+            <div class="kpi-delta delta-up">+ 3 200 € ce mois</div>
+          </div>
+          <div class="kpi">
+            <div class="kpi-label">CA du mois</div>
+            <div class="kpi-value">38 500 €</div>
+            <div class="kpi-delta delta-up">+ 12 % vs oct.</div>
+          </div>
+          <div class="kpi">
+            <div class="kpi-label">Charges</div>
+            <div class="kpi-value">29 100 €</div>
+            <div class="kpi-delta delta-down">+ 8 % vs oct.</div>
+          </div>
+          <div class="kpi">
+            <div class="kpi-label">Résultat estimé</div>
+            <div class="kpi-value positive">+ 9 400 €</div>
+            <div class="kpi-delta delta-up">Marge 24 %</div>
+          </div>
+        </div>
+        <div class="alerts">
+          <div class="alert-row">
+            <span class="alert-dot" style="background:#E24B4A"></span>
+            Studio Nova — 8 400 € non payé depuis 12 jours. Relance recommandée.
+          </div>
+          <div class="alert-row">
+            <span class="alert-dot" style="background:#EF9F27"></span>
+            Charges décembre en hausse prévue — surveiller les encaissements à venir.
+          </div>
+          <div class="alert-row">
+            <span class="alert-dot" style="background:#1D9E75"></span>
+            Trésorerie prévisionnelle à 90 jours stable au-dessus de 40 000 €.
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <hr class="divider"/>
+
+    <!-- PROBLÈME -->
+    <section>
+      <div class="section-tag">Le problème</div>
+      <h2 class="section-title">Vous utilisez Pennylane —<br/>mais vous pilotez encore <em>à l'aveugle</em></h2>
+      <p class="section-sub">Pennylane enregistre vos transactions. Votre expert-comptable vous donne les chiffres trois mois après. Entre les deux — vous naviguez sans visibilité.</p>
+      <div class="pain-grid">
+        <div class="pain-card">
+          <div class="pain-icon">⏰</div>
+          <h3>Vous découvrez les tensions trop tard</h3>
+          <p>Un retard de paiement, une charge imprévue — vous le voyez sur votre compte bancaire, pas en amont.</p>
+        </div>
+        <div class="pain-card">
+          <div class="pain-icon">🗂️</div>
+          <h3>Vos chiffres sont éparpillés</h3>
+          <p>Pennylane d'un côté, Excel de l'autre, votre banque ailleurs. Aucune vision consolidée en temps réel.</p>
+        </div>
+        <div class="pain-card">
+          <div class="pain-icon">🔁</div>
+          <h3>Le reporting mensuel vous ronge du temps</h3>
+          <p>Chaque fin de mois, vous compilez les mêmes données à la main. C'est du temps qui ne vous rapporte rien.</p>
+        </div>
+        <div class="pain-card">
+          <div class="pain-icon">🔮</div>
+          <h3>Impossible de prévoir à 90 jours</h3>
+          <p>Savoir ce que sera votre trésorerie dans trois mois nécessite un Excel complexe que personne ne maintient.</p>
+        </div>
+      </div>
+    </section>
+
+    <hr class="divider"/>
+
+    <!-- SOLUTION -->
+    <section id="comment">
+      <div class="section-tag">La solution</div>
+      <h2 class="section-title">Un dashboard qui se configure<br/><em>une fois</em> et tourne tout seul</h2>
+      <p class="section-sub">Je connecte votre outil comptable à un dashboard sur-mesure. Chaque nuit, vos données sont récupérées automatiquement.</p>
+      <div class="steps">
+        <div class="step">
+          <div class="step-num">1</div>
+          <div>
+            <h3>On se retrouve 30 minutes en visio</h3>
+            <p>Je configure tout moi-même pendant qu'on est ensemble. Vous n'avez rien à installer, rien à comprendre techniquement. Vous me donnez votre clé API — je fais le reste.</p>
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-num">2</div>
+          <div>
+            <h3>Votre dashboard est actif dès cette nuit</h3>
+            <p>La connexion avec Pennylane ou Qonto est en place. La première synchronisation tourne à minuit. Le lendemain matin, vos données sont là.</p>
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-num">3</div>
+          <div>
+            <h3>Vous pilotez — sans jamais rien toucher</h3>
+            <p>Trésorerie, CA, charges, impayés, prévisionnel à 90 jours — tout en un coup d'œil, chaque matin, mis à jour automatiquement pendant que vous dormez.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <hr class="divider"/>
+
+    <!-- COMPATIBILITÉ -->
+    <section>
+      <div class="compat-section">
+        <div class="section-tag">Compatibilité</div>
+        <h2 class="section-title" style="margin-bottom:8px">Quel outil utilisez-vous ?</h2>
+        <p style="font-size:16px;color:var(--text-muted);font-weight:300">Le dashboard se connecte aux outils que vous utilisez déjà. Pas besoin d'en changer.</p>
+        <div class="tools">
+          <span class="tool-pill">Pennylane</span>
+          <span class="tool-pill">Qonto</span>
+          <span class="tool-pill">QuickBooks</span>
+          <span class="tool-pill">Autre ? Contactez-moi</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- PRICING -->
+    <section>
+      <div style="text-align:center;margin-bottom:40px">
+        <div class="section-tag">Tarif</div>
+        <h2 class="section-title">Simple et transparent</h2>
+      </div>
+      <div class="pricing-wrap">
+        <div class="pricing-card">
+          <div class="pricing-tag">Tout inclus</div>
+          <div class="price-main">299 € <span>setup unique</span></div>
+          <div class="price-sub">puis 49 € / mois · sans engagement · résiliable à tout moment</div>
+          <ul class="features">
+            <li><span class="check"><svg viewBox="0 0 10 8" fill="none"><path d="M1 4l3 3 5-6" stroke="#fff" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></span>Visio de configuration de 30 min</li>
+            <li><span class="check"><svg viewBox="0 0 10 8" fill="none"><path d="M1 4l3 3 5-6" stroke="#fff" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></span>Connexion à votre outil comptable</li>
+            <li><span class="check"><svg viewBox="0 0 10 8" fill="none"><path d="M1 4l3 3 5-6" stroke="#fff" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></span>Dashboard Looker Studio sur-mesure</li>
+            <li><span class="check"><svg viewBox="0 0 10 8" fill="none"><path d="M1 4l3 3 5-6" stroke="#fff" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></span>Synchronisation automatique chaque nuit</li>
+            <li><span class="check"><svg viewBox="0 0 10 8" fill="none"><path d="M1 4l3 3 5-6" stroke="#fff" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></span>Alertes impayés et tensions de trésorerie</li>
+            <li><span class="check"><svg viewBox="0 0 10 8" fill="none"><path d="M1 4l3 3 5-6" stroke="#fff" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></span>Prévisionnel trésorerie à 90 jours</li>
+            <li><span class="check"><svg viewBox="0 0 10 8" fill="none"><path d="M1 4l3 3 5-6" stroke="#fff" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></span>Mises à jour du dashboard incluses</li>
+          </ul>
+          <a href="VOTRE_LIEN_CALENDLY" class="btn-cta-full" target="_blank">Réserver ma configuration →</a>
+          <p class="price-note">Résiliable à tout moment. Aucun engagement annuel.</p>
+        </div>
+      </div>
+    </section>
+
+    <hr class="divider"/>
+
+    <!-- FAQ -->
+    <section>
+      <div style="text-align:center;margin-bottom:40px">
+        <div class="section-tag">Questions fréquentes</div>
+        <h2 class="section-title">Ce que vous vous<br/>demandez sûrement</h2>
+      </div>
+      <div class="faq-list">
+        <div class="faq-item">
+          <div class="faq-q">Est-ce que mes données financières sont en sécurité ?</div>
+          <div class="faq-a">Votre clé API reste sous votre contrôle. Vous pouvez la révoquer à tout moment depuis Pennylane ou Qonto en un clic. Je n'ai jamais accès à votre espace comptable directement — seulement aux données que l'API expose.</div>
+        </div>
+        <div class="faq-item">
+          <div class="faq-q">Que se passe-t-il si j'arrête l'abonnement ?</div>
+          <div class="faq-a">La synchronisation automatique s'arrête. Votre dashboard affiche les dernières données connues mais ne se met plus à jour. Aucune donnée n'est supprimée de votre côté. Vous pouvez reprendre à tout moment.</div>
+        </div>
+        <div class="faq-item">
+          <div class="faq-q">J'ai un expert-comptable — est-ce compatible ?</div>
+          <div class="faq-a">Oui, et c'est même complémentaire. Votre expert-comptable fait la comptabilité. Clearbooks vous donne la vision de pilotage en temps réel, sans attendre les arrêtés trimestriels. Les deux se complètent parfaitement.</div>
+        </div>
+        <div class="faq-item">
+          <div class="faq-q">Combien de temps dure la configuration ?</div>
+          <div class="faq-a">30 minutes en visio, pas plus. Vous n'avez rien à préparer à l'avance. Je génère votre token API avec vous, je connecte tout, et votre dashboard est actif dès la nuit suivante.</div>
+        </div>
+        <div class="faq-item">
+          <div class="faq-q">Je n'y connais rien techniquement — c'est pour moi ?</div>
+          <div class="faq-a">C'est exactement fait pour vous. La promesse de Clearbooks c'est précisément que vous n'avez rien à comprendre techniquement. Vous me donnez accès pendant 30 minutes — je m'occupe du reste.</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- CTA FINAL -->
+    <div class="cta-section">
+      <div class="section-tag">Prêt ?</div>
+      <h2>Votre dashboard est à<br/>30 minutes de là.</h2>
+      <p>Réservez une visio gratuite de 30 minutes.<br/>Si ça ne vous convient pas, vous ne payez rien.</p>
+      <a href="VOTRE_LIEN_CALENDLY" class="btn-primary" target="_blank" style="font-size:16px;padding:16px 32px">Réserver ma configuration →</a>
+    </div>
+
+  </div>
+</main>
+
+<footer>
+  <div class="container">
+    <p>Clearbooks by <a href="#">Neorama</a> — Pilotage financier pour les TPE françaises</p>
+  </div>
+</footer>
+
+<script>
+document.querySelectorAll('.faq-item').forEach(item => {
+  item.addEventListener('click', () => {
+    const isOpen = item.classList.contains('open');
+    document.querySelectorAll('.faq-item').forEach(i => i.classList.remove('open'));
+    if (!isOpen) item.classList.add('open');
+  });
+});
+</script>
+
+</body>
+</html>
